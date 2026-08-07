@@ -1,0 +1,33 @@
+.sidebar {
+  width: 220px;
+  flex-shrink: 0;
+  align-self: stretch;
+  background-color: white;
+  border-right: 1px solid #e2e8f0;
+  padding: 1.5rem 1rem;
+}
+
+.nav {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.navLink {
+  color: var(--color-text-muted);
+  font-size: 0.95rem;
+  padding: 0.65rem 0.75rem;
+  border-radius: 8px;
+}
+
+.navLinkActive {
+  color: var(--color-primary);
+  background-color: #eff6ff;
+  font-weight: 600;
+}
+
+@media (max-width: 768px) {
+  .sidebar {
+    display: none;
+  }
+}

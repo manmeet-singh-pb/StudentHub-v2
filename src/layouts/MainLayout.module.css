@@ -4,38 +4,13 @@
   min-height: 100vh;
 }
 
-.header {
-  background-color: var(--color-secondary);
-  color: white;
-  padding: 1rem 1.5rem;
+.body {
   display: flex;
-  align-items: center;
-  justify-content: space-between;
-}
-
-.logo {
-  font-size: 1.25rem;
-  font-weight: 600;
-}
-
-.nav {
-  display: flex;
-  gap: 1.5rem;
-}
-
-.navLink {
-  color: var(--color-text-muted);
-  font-size: 0.95rem;
-  padding-bottom: 0.25rem;
-  border-bottom: 2px solid transparent;
-}
-
-.navLinkActive {
-  color: white;
-  border-bottom: 2px solid var(--color-accent);
+  flex: 1;
 }
 
 .content {
   flex: 1;
   padding: 2rem;
+  background-color: var(--color-background);
 }
