@@ -1,0 +1,30 @@
+.page {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+.pageHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.title {
+  font-size: 1.75rem;
+  color: var(--color-secondary);
+}
+
+.subtitle {
+  color: var(--color-text-muted);
+}
+
+.addButton {
+  padding: 0.65rem 1.25rem;
+  border-radius: 8px;
+  border: none;
+  background-color: var(--color-primary);
+  color: white;
+  font-size: 0.9rem;
+  font-weight: 600;
+}

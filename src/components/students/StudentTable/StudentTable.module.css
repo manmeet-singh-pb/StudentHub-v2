@@ -1,0 +1,27 @@
+.table {
+  width: 100%;
+  border-collapse: collapse;
+  background-color: white;
+  border-radius: 12px;
+  overflow: hidden;
+  box-shadow: 0 1px 3px rgba(15, 23, 42, 0.08);
+}
+
+.headerCell {
+  text-align: left;
+  padding: 0.85rem 1rem;
+  background-color: #f1f5f9;
+  color: var(--color-text-muted);
+  font-size: 0.8rem;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+}
+
+.emptyMessage {
+  background-color: white;
+  border-radius: 12px;
+  box-shadow: 0 1px 3px rgba(15, 23, 42, 0.08);
+  padding: 1.5rem;
+  color: var(--color-text-muted);
+  text-align: center;
+}
