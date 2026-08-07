@@ -1,12 +1,12 @@
 import { useState, useMemo } from "react";
-import { useStudents } from "../hooks/useStudents.js";
+import { useOutletContext } from "react-router-dom";
 import StudentTable from "../components/students/StudentTable/StudentTable.jsx";
 import StudentModal from "../components/students/StudentModal/StudentModal.jsx";
 import StudentForm from "../components/students/StudentForm/StudentForm.jsx";
 import styles from "./Students.module.css";
 
 const Students = () => {
-  const { students, addStudent, updateStudent, deleteStudent } = useStudents();
+  const { students, addStudent, updateStudent, deleteStudent } = useOutletContext();
 
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingStudent, setEditingStudent] = useState(null);
