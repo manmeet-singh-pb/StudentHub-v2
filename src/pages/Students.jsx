@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { useStudents } from "../hooks/useStudents.js";
 import StudentTable from "../components/students/StudentTable/StudentTable.jsx";
 import StudentModal from "../components/students/StudentModal/StudentModal.jsx";
@@ -10,6 +10,20 @@ const Students = () => {
 
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingStudent, setEditingStudent] = useState(null);
+  const [searchTerm, setSearchTerm] = useState("");
+
+  const filteredStudents = useMemo(() => {
+    const query = searchTerm.trim().toLowerCase();
+    if (!query) return students;
+
+    return students.filter((student) => {
+      return (
+        student.name.toLowerCase().includes(query) ||
+        student.email.toLowerCase().includes(query) ||
+        student.course.toLowerCase().includes(query)
+      );
+    });
+  }, [students, searchTerm]);
 
   const openAddModal = () => {
     setEditingStudent(null);
@@ -60,10 +74,20 @@ const Students = () => {
         </button>
       </div>
 
+      <input
+        type="text"
+        className={styles.searchInput}
+        placeholder="Search by name, email, or course..."
+        aria-label="Search students"
+        value={searchTerm}
+        onChange={(event) => setSearchTerm(event.target.value)}
+      />
+
       <StudentTable
-        students={students}
+        students={filteredStudents}
         onEdit={openEditModal}
         onDelete={handleDelete}
+        isSearchActive={searchTerm.trim().length > 0}
       />
 
       {isModalOpen && (
@@ -75,6 +99,7 @@ const Students = () => {
             initialValues={editingStudent}
             onSubmit={handleSubmit}
             onCancel={closeModal}
+            submitLabel={editingStudent ? "Update Student" : "Add Student"}
           />
         </StudentModal>
       )}

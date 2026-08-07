@@ -1,28 +1,48 @@
 import { useState, useEffect } from "react";
 import PropTypes from "prop-types";
+import { validateStudent } from "../../../utils/validateStudent.js";
 import styles from "./StudentForm.module.css";
 
-const emptyForm = { name: "", email: "", course: "" };
+const EMPTY_FORM = Object.freeze({
+  name: "",
+  email: "",
+  course: "",
+});
 
-const StudentForm = ({ initialValues, onSubmit, onCancel }) => {
-  const [formData, setFormData] = useState(initialValues || emptyForm);
+const StudentForm = ({ initialValues, onSubmit, onCancel, submitLabel }) => {
+  const [formData, setFormData] = useState(initialValues || EMPTY_FORM);
+  const [touched, setTouched] = useState({});
 
   useEffect(() => {
-    setFormData(initialValues || emptyForm);
+    setFormData(initialValues || EMPTY_FORM);
+    setTouched({});
   }, [initialValues]);
+
+  const errors = validateStudent(formData);
+  const hasErrors = Object.keys(errors).length > 0;
+  const hasBeenTouched = Object.keys(touched).length > 0;
 
   const handleChange = (event) => {
     const { name, value } = event.target;
     setFormData((prev) => ({ ...prev, [name]: value }));
+    setTouched((prev) => ({ ...prev, [name]: true }));
   };
 
   const handleSubmit = (event) => {
     event.preventDefault();
-    onSubmit(formData);
+    setTouched({ name: true, email: true, course: true });
+
+    if (!hasErrors) {
+      onSubmit({
+        name: formData.name.trim(),
+        email: formData.email.trim(),
+        course: formData.course.trim(),
+      });
+    }
   };
 
   return (
-    <form className={styles.form} onSubmit={handleSubmit}>
+    <form className={styles.form} onSubmit={handleSubmit} noValidate>
       <div className={styles.field}>
         <label htmlFor="name" className={styles.label}>
           Name
@@ -31,11 +51,19 @@ const StudentForm = ({ initialValues, onSubmit, onCancel }) => {
           id="name"
           name="name"
           type="text"
+          autoComplete="name"
+          autoFocus
           value={formData.name}
           onChange={handleChange}
           className={styles.input}
-          required
+          aria-invalid={Boolean(touched.name && errors.name)}
+          aria-describedby={errors.name ? "name-error" : undefined}
         />
+        {touched.name && errors.name && (
+          <p id="name-error" className={styles.errorText}>
+            {errors.name}
+          </p>
+        )}
       </div>
 
       <div className={styles.field}>
@@ -46,11 +74,18 @@ const StudentForm = ({ initialValues, onSubmit, onCancel }) => {
           id="email"
           name="email"
           type="email"
+          autoComplete="email"
           value={formData.email}
           onChange={handleChange}
           className={styles.input}
-          required
+          aria-invalid={Boolean(touched.email && errors.email)}
+          aria-describedby={errors.email ? "email-error" : undefined}
         />
+        {touched.email && errors.email && (
+          <p id="email-error" className={styles.errorText}>
+            {errors.email}
+          </p>
+        )}
       </div>
 
       <div className={styles.field}>
@@ -61,11 +96,18 @@ const StudentForm = ({ initialValues, onSubmit, onCancel }) => {
           id="course"
           name="course"
           type="text"
+          autoComplete="off"
           value={formData.course}
           onChange={handleChange}
           className={styles.input}
-          required
+          aria-invalid={Boolean(touched.course && errors.course)}
+          aria-describedby={errors.course ? "course-error" : undefined}
         />
+        {touched.course && errors.course && (
+          <p id="course-error" className={styles.errorText}>
+            {errors.course}
+          </p>
+        )}
       </div>
 
       <div className={styles.actions}>
@@ -76,8 +118,12 @@ const StudentForm = ({ initialValues, onSubmit, onCancel }) => {
         >
           Cancel
         </button>
-        <button type="submit" className={styles.submitButton}>
-          Save
+        <button
+          type="submit"
+          className={styles.submitButton}
+          disabled={hasBeenTouched && hasErrors}
+        >
+          {submitLabel}
         </button>
       </div>
     </form>
@@ -92,6 +138,7 @@ StudentForm.propTypes = {
   }),
   onSubmit: PropTypes.func.isRequired,
   onCancel: PropTypes.func.isRequired,
+  submitLabel: PropTypes.string.isRequired,
 };
 
 export default StudentForm;

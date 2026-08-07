@@ -29,6 +29,15 @@
   border-color: var(--color-primary);
 }
 
+.input[aria-invalid="true"] {
+  border-color: #dc2626;
+}
+
+.errorText {
+  font-size: 0.8rem;
+  color: #dc2626;
+}
+
 .actions {
   display: flex;
   justify-content: flex-end;
@@ -53,4 +62,9 @@
   color: white;
   font-size: 0.9rem;
   font-weight: 600;
+}
+
+.submitButton:disabled {
+  background-color: #93c5fd;
+  cursor: not-allowed;
 }

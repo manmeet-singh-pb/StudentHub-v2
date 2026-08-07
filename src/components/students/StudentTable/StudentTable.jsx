@@ -2,32 +2,48 @@ import PropTypes from "prop-types";
 import StudentRow from "./StudentRow.jsx";
 import styles from "./StudentTable.module.css";
 
-const StudentTable = ({ students, onEdit, onDelete }) => {
+const StudentTable = ({ students, onEdit, onDelete, isSearchActive = false }) => {
   if (students.length === 0) {
-    return <p className={styles.emptyMessage}>No students found.</p>;
+    return (
+      <div className={styles.emptyState}>
+        <p className={styles.emptyMessage}>
+          {isSearchActive ? "No matching students found." : "No students found."}
+        </p>
+      </div>
+    );
   }
 
   return (
-    <table className={styles.table}>
-      <thead>
-        <tr>
-          <th className={styles.headerCell}>Name</th>
-          <th className={styles.headerCell}>Email</th>
-          <th className={styles.headerCell}>Course</th>
-          <th className={styles.headerCell}>Actions</th>
-        </tr>
-      </thead>
-      <tbody>
-        {students.map((student) => (
-          <StudentRow
-            key={student.id}
-            student={student}
-            onEdit={onEdit}
-            onDelete={onDelete}
-          />
-        ))}
-      </tbody>
-    </table>
+    <div className={styles.tableWrapper}>
+      <table className={styles.table}>
+        <thead>
+          <tr>
+            <th scope="col" className={styles.headerCell}>
+              Name
+            </th>
+            <th scope="col" className={styles.headerCell}>
+              Email
+            </th>
+            <th scope="col" className={styles.headerCell}>
+              Course
+            </th>
+            <th scope="col" className={styles.headerCell}>
+              Actions
+            </th>
+          </tr>
+        </thead>
+        <tbody>
+          {students.map((student) => (
+            <StudentRow
+              key={student.id}
+              student={student}
+              onEdit={onEdit}
+              onDelete={onDelete}
+            />
+          ))}
+        </tbody>
+      </table>
+    </div>
   );
 };
 
@@ -42,6 +58,7 @@ StudentTable.propTypes = {
   ).isRequired,
   onEdit: PropTypes.func.isRequired,
   onDelete: PropTypes.func.isRequired,
+  isSearchActive: PropTypes.bool,
 };
 
 export default StudentTable;

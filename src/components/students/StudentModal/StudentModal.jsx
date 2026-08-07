@@ -4,9 +4,17 @@ import styles from "./StudentModal.module.css";
 const StudentModal = ({ title, onClose, children }) => {
   return (
     <div className={styles.overlay} onClick={onClose}>
-      <div className={styles.modal} onClick={(event) => event.stopPropagation()}>
+      <div
+        className={styles.modal}
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="student-modal-title"
+        onClick={(event) => event.stopPropagation()}
+      >
         <div className={styles.header}>
-          <h3 className={styles.title}>{title}</h3>
+          <h3 id="student-modal-title" className={styles.title}>
+            {title}
+          </h3>
           <button
             type="button"
             className={styles.closeButton}
