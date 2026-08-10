@@ -2,15 +2,9 @@ const normalizeCourseName = (course) => course.trim();
 
 export const getTotalStudents = (students) => students.length;
 
-export const getTotalCourses = (students) => {
-  const uniqueCourses = new Set(
-    students.map((student) => normalizeCourseName(student.course))
-  );
-  return uniqueCourses.size;
-};
-
-export const getMostPopularCourse = (students) => {
-  if (students.length === 0) return null;
+export const getCourseDistribution = (students) => {
+  const total = students.length;
+  if (total === 0) return [];
 
   const courseCounts = students.reduce((counts, student) => {
     const course = normalizeCourseName(student.course);
@@ -18,20 +12,27 @@ export const getMostPopularCourse = (students) => {
     return counts;
   }, {});
 
-  let topCourse = null;
-  let topCount = 0;
+  return Object.entries(courseCounts)
+    .map(([course, count]) => ({
+      course,
+      count,
+      percentage: Math.round((count / total) * 100),
+    }))
+    .sort((a, b) => b.count - a.count);
+};
 
-  Object.entries(courseCounts).forEach(([course, count]) => {
-    if (count > topCount) {
-      topCourse = course;
-      topCount = count;
-    }
-  });
+export const getTotalCourses = (students) => getCourseDistribution(students).length;
 
-  return topCourse;
+export const getMostPopularCourse = (students) => {
+  const distribution = getCourseDistribution(students);
+  return distribution.length > 0 ? distribution[0].course : null;
 };
 
 export const getLatestStudent = (students) => {
   if (students.length === 0) return null;
   return students[students.length - 1];
+};
+
+export const getRecentStudents = (students, limit = 5) => {
+  return [...students].reverse().slice(0, limit);
 };

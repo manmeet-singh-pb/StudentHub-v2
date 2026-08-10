@@ -1,0 +1,34 @@
+.table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.headerCell {
+  text-align: left;
+  padding: 0.5rem;
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+  color: var(--color-text-muted);
+  border-bottom: 1px solid #e2e8f0;
+}
+
+.row {
+  border-bottom: 1px solid #f1f5f9;
+}
+
+.row:last-child {
+  border-bottom: none;
+}
+
+.cell {
+  padding: 0.6rem 0.5rem;
+  font-size: 0.85rem;
+  color: var(--color-secondary);
+}
+
+.emptyMessage {
+  color: var(--color-text-muted);
+  text-align: center;
+  padding: 1rem 0;
+}

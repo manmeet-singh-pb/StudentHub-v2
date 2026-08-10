@@ -4,6 +4,8 @@ import {
   getTotalCourses,
   getMostPopularCourse,
   getLatestStudent,
+  getCourseDistribution,
+  getRecentStudents,
 } from "../utils/studentAnalytics.js";
 
 export const useStudentAnalytics = (students) => {
@@ -13,6 +15,8 @@ export const useStudentAnalytics = (students) => {
       totalCourses: getTotalCourses(students),
       mostPopularCourse: getMostPopularCourse(students),
       latestStudent: getLatestStudent(students),
+      courseDistribution: getCourseDistribution(students),
+      recentStudents: getRecentStudents(students, 5),
     }),
     [students]
   );
