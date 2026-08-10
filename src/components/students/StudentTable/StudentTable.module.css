@@ -1,20 +1,20 @@
 .tableWrapper {
   overflow-x: auto;
   border-radius: 12px;
-  box-shadow: 0 1px 3px rgba(15, 23, 42, 0.08);
+  box-shadow: var(--shadow-card);
 }
 
 .table {
   width: 100%;
   min-width: 560px;
   border-collapse: collapse;
-  background-color: white;
+  background-color: var(--color-surface);
 }
 
 .headerCell {
   text-align: left;
   padding: 0.85rem 1rem;
-  background-color: #f1f5f9;
+  background-color: var(--color-surface-muted);
   color: var(--color-text-muted);
   font-size: 0.8rem;
   text-transform: uppercase;
@@ -23,9 +23,9 @@
 }
 
 .emptyState {
-  background-color: white;
+  background-color: var(--color-surface);
   border-radius: 12px;
-  box-shadow: 0 1px 3px rgba(15, 23, 42, 0.08);
+  box-shadow: var(--shadow-card);
   padding: 2.5rem 1.5rem;
   display: flex;
   align-items: center;

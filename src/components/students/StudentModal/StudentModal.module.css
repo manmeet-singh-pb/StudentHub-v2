@@ -10,9 +10,9 @@
 }
 
 .modal {
-  background-color: white;
+  background-color: var(--color-surface);
   border-radius: 12px;
-  box-shadow: 0 10px 30px rgba(15, 23, 42, 0.2);
+  box-shadow: var(--shadow-modal);
   width: 100%;
   max-width: 420px;
   padding: 1.5rem;
@@ -27,7 +27,7 @@
 
 .title {
   font-size: 1.2rem;
-  color: var(--color-secondary);
+  color: var(--color-text);
 }
 
 .closeButton {

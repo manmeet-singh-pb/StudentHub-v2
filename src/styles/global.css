@@ -17,9 +17,10 @@ body {
 body {
   font-family: system-ui, sans-serif;
   background-color: var(--color-background);
-  color: var(--color-secondary);
+  color: var(--color-text);
   line-height: 1.5;
   -webkit-font-smoothing: antialiased;
+  transition: background-color 0.2s ease, color 0.2s ease;
 }
 
 #root {

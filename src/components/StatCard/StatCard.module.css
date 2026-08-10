@@ -1,13 +1,13 @@
 .card {
-  background-color: white;
+  background-color: var(--color-surface);
   border-radius: 12px;
-  box-shadow: 0 1px 3px rgba(15, 23, 42, 0.08);
+  box-shadow: var(--shadow-card);
   padding: 1.25rem;
   transition: box-shadow 0.2s ease, transform 0.2s ease;
 }
 
 .card:hover {
-  box-shadow: 0 4px 12px rgba(15, 23, 42, 0.12);
+  box-shadow: var(--shadow-card-hover);
   transform: translateY(-2px);
 }
 
@@ -20,5 +20,5 @@
 .value {
   font-size: 1.75rem;
   font-weight: 700;
-  color: var(--color-secondary);
+  color: var(--color-text);
 }

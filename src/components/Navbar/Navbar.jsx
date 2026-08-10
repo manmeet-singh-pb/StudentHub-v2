@@ -1,4 +1,5 @@
 import { Menu, Bell } from "lucide-react";
+import ThemeToggle from "../theme/ThemeToggle/ThemeToggle.jsx";
 import styles from "./Navbar.module.css";
 
 const Navbar = () => {
@@ -12,6 +13,7 @@ const Navbar = () => {
       </div>
 
       <div className={styles.right}>
+        <ThemeToggle />
         <div className={styles.notificationIcon} aria-hidden="true">
           <Bell size={20} />
         </div>

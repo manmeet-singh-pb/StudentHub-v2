@@ -1,5 +1,5 @@
 .row {
-  border-bottom: 1px solid #e2e8f0;
+  border-bottom: 1px solid var(--color-border);
 }
 
 .row:last-child {
@@ -9,7 +9,7 @@
 .cell {
   padding: 0.85rem 1rem;
   font-size: 0.9rem;
-  color: var(--color-secondary);
+  color: var(--color-text);
 }
 
 .actions {
@@ -27,11 +27,11 @@
 }
 
 .editButton {
-  background-color: #eff6ff;
+  background-color: var(--color-primary-soft);
   color: var(--color-primary);
 }
 
 .deleteButton {
-  background-color: #fef2f2;
-  color: #dc2626;
+  background-color: var(--color-danger-soft);
+  color: var(--color-danger);
 }
