@@ -46,3 +46,9 @@ img {
   max-width: 100%;
   display: block;
 }
+
+@media (prefers-reduced-motion: reduce) {
+  body {
+    transition: none;
+  }
+}

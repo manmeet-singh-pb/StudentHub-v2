@@ -8,6 +8,7 @@
   padding: 0.4rem 0.75rem;
   border-radius: 999px;
   font-size: 0.8rem;
+  transition: background-color 0.15s ease;
 }
 
 .toggle:hover {
@@ -31,5 +32,11 @@
 @media (max-width: 768px) {
   .label {
     display: none;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .toggle {
+    transition: none;
   }
 }
