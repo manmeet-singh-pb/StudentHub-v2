@@ -7,8 +7,4 @@ export const navigation = [
     label: "Students",
     path: "/students",
   },
-  {
-    label: "Courses",
-    path: "/courses",
-  },
 ];
