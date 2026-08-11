@@ -3,6 +3,7 @@ import { useOutletContext } from "react-router-dom";
 import StudentTable from "../components/students/StudentTable/StudentTable.jsx";
 import StudentModal from "../components/students/StudentModal/StudentModal.jsx";
 import StudentForm from "../components/students/StudentForm/StudentForm.jsx";
+import Button from "../components/common/Button/Button.jsx";
 import styles from "./Students.module.css";
 
 const Students = () => {
@@ -65,13 +66,9 @@ const Students = () => {
           <h2 className={styles.title}>Students</h2>
           <p className={styles.subtitle}>Manage student records.</p>
         </div>
-        <button
-          type="button"
-          className={styles.addButton}
-          onClick={openAddModal}
-        >
+        <Button variant="primary" onClick={openAddModal}>
           Add Student
-        </button>
+        </Button>
       </div>
 
       <input
@@ -100,6 +97,7 @@ const Students = () => {
             onSubmit={handleSubmit}
             onCancel={closeModal}
             submitLabel={editingStudent ? "Update Student" : "Add Student"}
+            existingStudents={students}
           />
         </StudentModal>
       )}

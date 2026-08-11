@@ -16,22 +16,3 @@
   display: flex;
   gap: 0.5rem;
 }
-
-.editButton,
-.deleteButton {
-  padding: 0.4rem 0.75rem;
-  border-radius: 6px;
-  border: none;
-  font-size: 0.8rem;
-  font-weight: 600;
-}
-
-.editButton {
-  background-color: var(--color-primary-soft);
-  color: var(--color-primary);
-}
-
-.deleteButton {
-  background-color: var(--color-danger-soft);
-  color: var(--color-danger);
-}

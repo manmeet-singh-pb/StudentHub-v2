@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import PropTypes from "prop-types";
 import { validateStudent } from "../../../utils/validateStudent.js";
+import Button from "../../common/Button/Button.jsx";
 import styles from "./StudentForm.module.css";
 
 const EMPTY_FORM = Object.freeze({
@@ -9,7 +10,7 @@ const EMPTY_FORM = Object.freeze({
   course: "",
 });
 
-const StudentForm = ({ initialValues, onSubmit, onCancel, submitLabel }) => {
+const StudentForm = ({ initialValues, onSubmit, onCancel, submitLabel, existingStudents }) => {
   const [formData, setFormData] = useState(initialValues || EMPTY_FORM);
   const [touched, setTouched] = useState({});
 
@@ -18,7 +19,8 @@ const StudentForm = ({ initialValues, onSubmit, onCancel, submitLabel }) => {
     setTouched({});
   }, [initialValues]);
 
-  const errors = validateStudent(formData);
+  const currentStudentId = initialValues ? initialValues.id : null;
+  const errors = validateStudent(formData, existingStudents, currentStudentId);
   const hasErrors = Object.keys(errors).length > 0;
   const hasBeenTouched = Object.keys(touched).length > 0;
 
@@ -111,20 +113,12 @@ const StudentForm = ({ initialValues, onSubmit, onCancel, submitLabel }) => {
       </div>
 
       <div className={styles.actions}>
-        <button
-          type="button"
-          className={styles.cancelButton}
-          onClick={onCancel}
-        >
+        <Button type="button" variant="secondary" onClick={onCancel}>
           Cancel
-        </button>
-        <button
-          type="submit"
-          className={styles.submitButton}
-          disabled={hasBeenTouched && hasErrors}
-        >
+        </Button>
+        <Button type="submit" variant="primary" disabled={hasBeenTouched && hasErrors}>
           {submitLabel}
-        </button>
+        </Button>
       </div>
     </form>
   );
@@ -132,6 +126,7 @@ const StudentForm = ({ initialValues, onSubmit, onCancel, submitLabel }) => {
 
 StudentForm.propTypes = {
   initialValues: PropTypes.shape({
+    id: PropTypes.string,
     name: PropTypes.string,
     email: PropTypes.string,
     course: PropTypes.string,
@@ -139,6 +134,12 @@ StudentForm.propTypes = {
   onSubmit: PropTypes.func.isRequired,
   onCancel: PropTypes.func.isRequired,
   submitLabel: PropTypes.string.isRequired,
+  existingStudents: PropTypes.arrayOf(
+    PropTypes.shape({
+      id: PropTypes.string.isRequired,
+      email: PropTypes.string.isRequired,
+    })
+  ).isRequired,
 };
 
 export default StudentForm;

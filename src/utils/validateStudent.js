@@ -1,6 +1,6 @@
 const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
-export const validateStudent = (formData) => {
+export const validateStudent = (formData, existingStudents = [], currentStudentId = null) => {
   const errors = {};
 
   const name = formData.name.trim();
@@ -15,6 +15,15 @@ export const validateStudent = (formData) => {
     errors.email = "Email is required.";
   } else if (!EMAIL_REGEX.test(email)) {
     errors.email = "Enter a valid email address.";
+  } else {
+    const isDuplicate = existingStudents.some(
+      (student) =>
+        student.id !== currentStudentId &&
+        student.email.trim().toLowerCase() === email.toLowerCase()
+    );
+    if (isDuplicate) {
+      errors.email = "A student with this email already exists.";
+    }
   }
 
   if (!course) {

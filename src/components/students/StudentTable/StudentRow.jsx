@@ -1,4 +1,5 @@
 import PropTypes from "prop-types";
+import Button from "../../common/Button/Button.jsx";
 import styles from "./StudentRow.module.css";
 
 const StudentRow = ({ student, onEdit, onDelete }) => {
@@ -9,20 +10,12 @@ const StudentRow = ({ student, onEdit, onDelete }) => {
       <td className={styles.cell}>{student.course}</td>
       <td className={styles.cell}>
         <div className={styles.actions}>
-          <button
-            type="button"
-            className={styles.editButton}
-            onClick={() => onEdit(student)}
-          >
+          <Button variant="secondary" size="sm" onClick={() => onEdit(student)}>
             Edit
-          </button>
-          <button
-            type="button"
-            className={styles.deleteButton}
-            onClick={() => onDelete(student.id)}
-          >
+          </Button>
+          <Button variant="danger" size="sm" onClick={() => onDelete(student.id)}>
             Delete
-          </button>
+          </Button>
         </div>
       </td>
     </tr>

@@ -14,3 +14,25 @@
   padding: 2rem;
   background-color: var(--color-background);
 }
+
+.skipLink {
+  position: absolute;
+  top: -40px;
+  left: 0;
+  background-color: var(--color-primary);
+  color: white;
+  padding: 0.6rem 1rem;
+  border-radius: 0 0 8px 0;
+  z-index: 300;
+  transition: top 0.15s ease;
+}
+
+.skipLink:focus {
+  top: 0;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .skipLink {
+    transition: none;
+  }
+}
