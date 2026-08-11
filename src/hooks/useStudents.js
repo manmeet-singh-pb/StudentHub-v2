@@ -1,9 +1,25 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { initialStudents } from "../constants/initialStudents.js";
 import { generateStudentId } from "../utils/generateStudentId.js";
+import { loadStudents, saveStudents } from "../utils/studentStorage.js";
 
 export const useStudents = () => {
-  const [students, setStudents] = useState(initialStudents);
+  const [students, setStudents] = useState(() => {
+    const { students: loaded, wasCorrupted, hadStorageError } = loadStudents();
+
+    if (wasCorrupted) return [];
+    if (hadStorageError || loaded === null) return initialStudents;
+    return loaded;
+  });
+
+  const [showResetNotice, setShowResetNotice] = useState(() => {
+    const { wasCorrupted } = loadStudents();
+    return wasCorrupted;
+  });
+
+  useEffect(() => {
+    saveStudents(students);
+  }, [students]);
 
   const addStudent = (studentData) => {
     const newStudent = {
@@ -25,5 +41,14 @@ export const useStudents = () => {
     setStudents((prev) => prev.filter((student) => student.id !== id));
   };
 
-  return { students, addStudent, updateStudent, deleteStudent };
+  const dismissNotice = () => setShowResetNotice(false);
+
+  return {
+    students,
+    addStudent,
+    updateStudent,
+    deleteStudent,
+    showResetNotice,
+    dismissNotice,
+  };
 };
