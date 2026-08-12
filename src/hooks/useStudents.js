@@ -4,51 +4,90 @@ import { generateStudentId } from "../utils/generateStudentId.js";
 import { loadStudents, saveStudents } from "../utils/studentStorage.js";
 
 export const useStudents = () => {
-  const [students, setStudents] = useState(() => {
-    const { students: loaded, wasCorrupted, hadStorageError } = loadStudents();
-
-    if (wasCorrupted) return [];
-    if (hadStorageError || loaded === null) return initialStudents;
-    return loaded;
-  });
-
-  const [showResetNotice, setShowResetNotice] = useState(() => {
-    const { wasCorrupted } = loadStudents();
-    return wasCorrupted;
-  });
+  const [students, setStudents] = useState([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState(null);
+  const [showResetNotice, setShowResetNotice] = useState(false);
 
   useEffect(() => {
-    saveStudents(students);
-  }, [students]);
+    let isMounted = true;
 
-  const addStudent = (studentData) => {
+    loadStudents()
+      .then(({ students: loaded, wasCorrupted, hadStorageError }) => {
+        if (!isMounted) return;
+
+        let nextStudents;
+        if (wasCorrupted) {
+          nextStudents = [];
+          setShowResetNotice(true);
+        } else if (hadStorageError || loaded === null) {
+          nextStudents = initialStudents;
+        } else {
+          nextStudents = loaded;
+        }
+
+        setStudents(nextStudents);
+        // Self-heal: persist the cleaned/seeded result so any corrupted
+        // or dropped entries don't linger in storage.
+        saveStudents(nextStudents);
+      })
+      .catch(() => {
+        if (!isMounted) return;
+        setError("Unable to load student data. Starting with default students.");
+        setStudents(initialStudents);
+      })
+      .finally(() => {
+        if (isMounted) setIsLoading(false);
+      });
+
+    return () => {
+      isMounted = false;
+    };
+  }, []);
+
+  const persist = (nextStudents) => {
+    return saveStudents(nextStudents).then((success) => {
+      setError(success ? null : "Your last change couldn't be saved.");
+      return success;
+    });
+  };
+
+  const addStudent = async (studentData) => {
     const newStudent = {
       id: generateStudentId(),
       ...studentData,
     };
-    setStudents((prev) => [...prev, newStudent]);
+    const nextStudents = [...students, newStudent];
+    setStudents(nextStudents);
+    await persist(nextStudents);
   };
 
-  const updateStudent = (id, updatedData) => {
-    setStudents((prev) =>
-      prev.map((student) =>
-        student.id === id ? { ...student, ...updatedData } : student
-      )
+  const updateStudent = async (id, updatedData) => {
+    const nextStudents = students.map((student) =>
+      student.id === id ? { ...student, ...updatedData } : student
     );
+    setStudents(nextStudents);
+    await persist(nextStudents);
   };
 
-  const deleteStudent = (id) => {
-    setStudents((prev) => prev.filter((student) => student.id !== id));
+  const deleteStudent = async (id) => {
+    const nextStudents = students.filter((student) => student.id !== id);
+    setStudents(nextStudents);
+    await persist(nextStudents);
   };
 
   const dismissNotice = () => setShowResetNotice(false);
+  const dismissError = () => setError(null);
 
   return {
     students,
+    isLoading,
+    error,
     addStudent,
     updateStudent,
     deleteStudent,
     showResetNotice,
     dismissNotice,
+    dismissError,
   };
 };

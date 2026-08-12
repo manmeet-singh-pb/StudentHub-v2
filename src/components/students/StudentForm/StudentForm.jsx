@@ -10,7 +10,14 @@ const EMPTY_FORM = Object.freeze({
   course: "",
 });
 
-const StudentForm = ({ initialValues, onSubmit, onCancel, submitLabel, existingStudents }) => {
+const StudentForm = ({
+  initialValues,
+  onSubmit,
+  onCancel,
+  submitLabel,
+  existingStudents,
+  isSubmitting = false,
+}) => {
   const [formData, setFormData] = useState(initialValues || EMPTY_FORM);
   const [touched, setTouched] = useState({});
 
@@ -113,11 +120,20 @@ const StudentForm = ({ initialValues, onSubmit, onCancel, submitLabel, existingS
       </div>
 
       <div className={styles.actions}>
-        <Button type="button" variant="secondary" onClick={onCancel}>
+        <Button
+          type="button"
+          variant="secondary"
+          onClick={onCancel}
+          disabled={isSubmitting}
+        >
           Cancel
         </Button>
-        <Button type="submit" variant="primary" disabled={hasBeenTouched && hasErrors}>
-          {submitLabel}
+        <Button
+          type="submit"
+          variant="primary"
+          disabled={isSubmitting || (hasBeenTouched && hasErrors)}
+        >
+          {isSubmitting ? "Saving…" : submitLabel}
         </Button>
       </div>
     </form>
@@ -140,6 +156,7 @@ StudentForm.propTypes = {
       email: PropTypes.string.isRequired,
     })
   ).isRequired,
+  isSubmitting: PropTypes.bool,
 };
 
 export default StudentForm;

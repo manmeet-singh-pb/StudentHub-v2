@@ -9,12 +9,21 @@ import styles from "./Students.module.css";
 const ALL_COURSES_VALUE = "";
 
 const Students = () => {
-  const { students, addStudent, updateStudent, deleteStudent } = useOutletContext();
+  const {
+    students,
+    isLoading,
+    error,
+    addStudent,
+    updateStudent,
+    deleteStudent,
+    dismissError,
+  } = useOutletContext();
 
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingStudent, setEditingStudent] = useState(null);
   const [searchTerm, setSearchTerm] = useState("");
   const [courseFilter, setCourseFilter] = useState(ALL_COURSES_VALUE);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const uniqueCourses = useMemo(() => {
     const courseSet = new Set(students.map((student) => student.course.trim()));
@@ -61,13 +70,18 @@ const Students = () => {
     setEditingStudent(null);
   };
 
-  const handleSubmit = (formData) => {
-    if (editingStudent) {
-      updateStudent(editingStudent.id, formData);
-    } else {
-      addStudent(formData);
+  const handleSubmit = async (formData) => {
+    setIsSubmitting(true);
+    try {
+      if (editingStudent) {
+        await updateStudent(editingStudent.id, formData);
+      } else {
+        await addStudent(formData);
+      }
+      closeModal();
+    } finally {
+      setIsSubmitting(false);
     }
-    closeModal();
   };
 
   const handleDelete = (id) => {
@@ -78,6 +92,14 @@ const Students = () => {
       deleteStudent(id);
     }
   };
+
+  if (isLoading) {
+    return (
+      <section className={styles.page}>
+        <p className={styles.loadingMessage}>Loading students…</p>
+      </section>
+    );
+  }
 
   return (
     <section className={styles.page}>
@@ -90,6 +112,15 @@ const Students = () => {
           Add Student
         </Button>
       </div>
+
+      {error && (
+        <div className={styles.errorBanner} role="alert">
+          <span>{error}</span>
+          <Button variant="secondary" size="sm" onClick={dismissError}>
+            Dismiss
+          </Button>
+        </div>
+      )}
 
       <div className={styles.filterRow}>
         <div className={styles.field}>
@@ -150,6 +181,7 @@ const Students = () => {
             onCancel={closeModal}
             submitLabel={editingStudent ? "Update Student" : "Add Student"}
             existingStudents={students}
+            isSubmitting={isSubmitting}
           />
         </StudentModal>
       )}

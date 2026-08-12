@@ -6,8 +6,16 @@ import RecentStudents from "../components/dashboard/RecentStudents/RecentStudent
 import styles from "./Dashboard.module.css";
 
 const Dashboard = () => {
-  const { students } = useOutletContext();
+  const { students, isLoading } = useOutletContext();
   const analytics = useStudentAnalytics(students);
+
+  if (isLoading) {
+    return (
+      <section className={styles.page}>
+        <p className={styles.loadingMessage}>Loading dashboard…</p>
+      </section>
+    );
+  }
 
   return (
     <section className={styles.page}>

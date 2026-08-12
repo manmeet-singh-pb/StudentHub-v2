@@ -15,7 +15,7 @@ const isValidStudent = (value) => {
   );
 };
 
-export const loadStudents = () => {
+const readFromStorage = () => {
   let raw;
   try {
     raw = localStorage.getItem(STORAGE_KEY);
@@ -42,11 +42,13 @@ export const loadStudents = () => {
   return { students: validStudents, wasCorrupted: false, hadStorageError: false };
 };
 
+export const loadStudents = () => Promise.resolve(readFromStorage());
+
 export const saveStudents = (students) => {
   try {
     localStorage.setItem(STORAGE_KEY, JSON.stringify(students));
-    return true;
+    return Promise.resolve(true);
   } catch {
-    return false;
+    return Promise.resolve(false);
   }
 };
