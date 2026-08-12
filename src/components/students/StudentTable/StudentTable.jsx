@@ -2,12 +2,12 @@ import PropTypes from "prop-types";
 import StudentRow from "./StudentRow.jsx";
 import styles from "./StudentTable.module.css";
 
-const StudentTable = ({ students, onEdit, onDelete, isSearchActive = false }) => {
+const StudentTable = ({ students, onEdit, onDelete, isFilterActive = false }) => {
   if (students.length === 0) {
     return (
       <div className={styles.emptyState}>
         <p className={styles.emptyMessage}>
-          {isSearchActive ? "No matching students found." : "No students found."}
+          {isFilterActive ? "No matching students found." : "No students found."}
         </p>
       </div>
     );
@@ -58,7 +58,7 @@ StudentTable.propTypes = {
   ).isRequired,
   onEdit: PropTypes.func.isRequired,
   onDelete: PropTypes.func.isRequired,
-  isSearchActive: PropTypes.bool,
+  isFilterActive: PropTypes.bool,
 };
 
 export default StudentTable;
