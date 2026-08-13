@@ -1,21 +1,14 @@
-# StudentHub v2
+## Backend (in progress)
 
-A modern Student Management System, built phase by phase as a full-stack portfolio project.
+A minimal Express server foundation lives in `server/`. It runs independently of the frontend and does not yet connect to it.
 
-## Current Status
+To run it:
 
-- ✅ Phase 1 Complete — Project Foundation
+\`\`\`
+cd server
+npm install
+cp .env.example .env
+npm run dev
+\`\`\`
 
-## Tech Stack
-
-- React
-- Vite
-- JavaScript
-
-## Project Structure
-
-The project follows a clean, scalable folder organization designed to grow cleanly across phases:
-
-- Component-level styles use **CSS Modules**, colocated with their component (e.g. `App.jsx` + `App.module.css`) so styles stay scoped and easy to trace.
-- `src/styles/` holds only **global styling** — `global.css` (base reset and typography) and `variables.css` (shared design tokens) — nothing component-specific lives here.
-- Feature areas (`components/`, `pages/`, `hooks/`, `context/`, `services/`, etc.) are separated by responsibility, keeping the codebase easy to navigate as it grows.
+Health check: `GET http://localhost:5000/api/health`
