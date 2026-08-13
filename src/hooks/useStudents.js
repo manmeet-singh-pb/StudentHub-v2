@@ -1,40 +1,27 @@
 import { useState, useEffect } from "react";
-import { initialStudents } from "../constants/initialStudents.js";
-import { generateStudentId } from "../utils/generateStudentId.js";
-import { loadStudents, saveStudents } from "../utils/studentStorage.js";
+import {
+  getStudents,
+  createStudent,
+  updateStudent as updateStudentApi,
+  deleteStudent as deleteStudentApi,
+} from "../services/studentApi.js";
 
 export const useStudents = () => {
   const [students, setStudents] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState(null);
-  const [showResetNotice, setShowResetNotice] = useState(false);
 
   useEffect(() => {
     let isMounted = true;
 
-    loadStudents()
-      .then(({ students: loaded, wasCorrupted, hadStorageError }) => {
-        if (!isMounted) return;
-
-        let nextStudents;
-        if (wasCorrupted) {
-          nextStudents = [];
-          setShowResetNotice(true);
-        } else if (hadStorageError || loaded === null) {
-          nextStudents = initialStudents;
-        } else {
-          nextStudents = loaded;
-        }
-
-        setStudents(nextStudents);
-        // Self-heal: persist the cleaned/seeded result so any corrupted
-        // or dropped entries don't linger in storage.
-        saveStudents(nextStudents);
+    getStudents()
+      .then((data) => {
+        if (isMounted) setStudents(data);
       })
       .catch(() => {
-        if (!isMounted) return;
-        setError("Unable to load student data. Starting with default students.");
-        setStudents(initialStudents);
+        if (isMounted) {
+          setError("Unable to load students. Please make sure the backend is running.");
+        }
       })
       .finally(() => {
         if (isMounted) setIsLoading(false);
@@ -45,38 +32,40 @@ export const useStudents = () => {
     };
   }, []);
 
-  const persist = (nextStudents) => {
-    return saveStudents(nextStudents).then((success) => {
-      setError(success ? null : "Your last change couldn't be saved.");
-      return success;
-    });
-  };
-
   const addStudent = async (studentData) => {
-    const newStudent = {
-      id: generateStudentId(),
-      ...studentData,
-    };
-    const nextStudents = [...students, newStudent];
-    setStudents(nextStudents);
-    await persist(nextStudents);
+    try {
+      const newStudent = await createStudent(studentData);
+      setStudents((prev) => [newStudent, ...prev]);
+      setError(null);
+      return true;
+    } catch (err) {
+      setError(err.message || "Unable to add student.");
+      return false;
+    }
   };
 
   const updateStudent = async (id, updatedData) => {
-    const nextStudents = students.map((student) =>
-      student.id === id ? { ...student, ...updatedData } : student
-    );
-    setStudents(nextStudents);
-    await persist(nextStudents);
+    try {
+      const updated = await updateStudentApi(id, updatedData);
+      setStudents((prev) => prev.map((student) => (student.id === id ? updated : student)));
+      setError(null);
+      return true;
+    } catch (err) {
+      setError(err.message || "Unable to update student.");
+      return false;
+    }
   };
 
   const deleteStudent = async (id) => {
-    const nextStudents = students.filter((student) => student.id !== id);
-    setStudents(nextStudents);
-    await persist(nextStudents);
+    try {
+      await deleteStudentApi(id);
+      setStudents((prev) => prev.filter((student) => student.id !== id));
+      setError(null);
+    } catch (err) {
+      setError(err.message || "Unable to delete student.");
+    }
   };
 
-  const dismissNotice = () => setShowResetNotice(false);
   const dismissError = () => setError(null);
 
   return {
@@ -86,8 +75,6 @@ export const useStudents = () => {
     addStudent,
     updateStudent,
     deleteStudent,
-    showResetNotice,
-    dismissNotice,
     dismissError,
   };
 };

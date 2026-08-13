@@ -1,7 +1,7 @@
 {
   "name": "studenthub-server",
   "version": "1.0.0",
-  "description": "StudentHub v2 backend foundation",
+  "description": "StudentHub v2 backend",
   "type": "module",
   "main": "server.js",
   "scripts": {
@@ -9,6 +9,7 @@
     "dev": "node --watch server.js"
   },
   "dependencies": {
+    "cors": "^2.8.5",
     "dotenv": "^16.4.5",
     "express": "^4.19.2",
     "mongoose": "^8.5.0"

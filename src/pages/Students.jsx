@@ -40,15 +40,13 @@ const Students = () => {
         student.email.toLowerCase().includes(query) ||
         student.course.toLowerCase().includes(query);
 
-      const matchesCourse =
-        !courseFilter || student.course.trim() === courseFilter;
+      const matchesCourse = !courseFilter || student.course.trim() === courseFilter;
 
       return matchesSearch && matchesCourse;
     });
   }, [students, searchTerm, courseFilter]);
 
-  const isFilterActive =
-    searchTerm.trim().length > 0 || courseFilter !== ALL_COURSES_VALUE;
+  const isFilterActive = searchTerm.trim().length > 0 || courseFilter !== ALL_COURSES_VALUE;
 
   const clearFilters = () => {
     setSearchTerm("");
@@ -73,21 +71,19 @@ const Students = () => {
   const handleSubmit = async (formData) => {
     setIsSubmitting(true);
     try {
-      if (editingStudent) {
-        await updateStudent(editingStudent.id, formData);
-      } else {
-        await addStudent(formData);
+      const success = editingStudent
+        ? await updateStudent(editingStudent.id, formData)
+        : await addStudent(formData);
+      if (success) {
+        closeModal();
       }
-      closeModal();
     } finally {
       setIsSubmitting(false);
     }
   };
 
   const handleDelete = (id) => {
-    const confirmed = window.confirm(
-      "Are you sure you want to delete this student?"
-    );
+    const confirmed = window.confirm("Are you sure you want to delete this student?");
     if (confirmed) {
       deleteStudent(id);
     }
@@ -96,7 +92,7 @@ const Students = () => {
   if (isLoading) {
     return (
       <section className={styles.page}>
-        <p className={styles.loadingMessage}>Loading students…</p>
+        <p className={styles.loadingMessage}>Loading students...</p>
       </section>
     );
   }

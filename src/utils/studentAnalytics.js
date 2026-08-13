@@ -28,11 +28,17 @@ export const getMostPopularCourse = (students) => {
   return distribution.length > 0 ? distribution[0].course : null;
 };
 
-export const getLatestStudent = (students) => {
-  if (students.length === 0) return null;
-  return students[students.length - 1];
+export const getRecentStudents = (students, limit = 5) => {
+  const sorted = [...students].sort((a, b) => {
+    const aTime = a.createdAt ? new Date(a.createdAt).getTime() : 0;
+    const bTime = b.createdAt ? new Date(b.createdAt).getTime() : 0;
+    return bTime - aTime;
+  });
+  return sorted.slice(0, limit);
 };
 
-export const getRecentStudents = (students, limit = 5) => {
-  return [...students].reverse().slice(0, limit);
+export const getLatestStudent = (students) => {
+  if (students.length === 0) return null;
+  const [mostRecent] = getRecentStudents(students, 1);
+  return mostRecent || null;
 };
