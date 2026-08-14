@@ -5,11 +5,21 @@ import {
   updateStudent as updateStudentApi,
   deleteStudent as deleteStudentApi,
 } from "../services/studentApi.js";
+import { useAuth } from "../context/AuthContext.jsx";
 
 export const useStudents = () => {
+  const { logout } = useAuth();
   const [students, setStudents] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState(null);
+
+  const handleAuthError = (err) => {
+    if (err.status === 401) {
+      logout();
+      return true;
+    }
+    return false;
+  };
 
   useEffect(() => {
     let isMounted = true;
@@ -18,8 +28,9 @@ export const useStudents = () => {
       .then((data) => {
         if (isMounted) setStudents(data);
       })
-      .catch(() => {
-        if (isMounted) {
+      .catch((err) => {
+        if (!isMounted) return;
+        if (!handleAuthError(err)) {
           setError("Unable to load students. Please make sure the backend is running.");
         }
       })
@@ -39,7 +50,9 @@ export const useStudents = () => {
       setError(null);
       return true;
     } catch (err) {
-      setError(err.message || "Unable to add student.");
+      if (!handleAuthError(err)) {
+        setError(err.message || "Unable to add student.");
+      }
       return false;
     }
   };
@@ -51,7 +64,9 @@ export const useStudents = () => {
       setError(null);
       return true;
     } catch (err) {
-      setError(err.message || "Unable to update student.");
+      if (!handleAuthError(err)) {
+        setError(err.message || "Unable to update student.");
+      }
       return false;
     }
   };
@@ -62,7 +77,9 @@ export const useStudents = () => {
       setStudents((prev) => prev.filter((student) => student.id !== id));
       setError(null);
     } catch (err) {
-      setError(err.message || "Unable to delete student.");
+      if (!handleAuthError(err)) {
+        setError(err.message || "Unable to delete student.");
+      }
     }
   };
 

@@ -1,9 +1,12 @@
 import PropTypes from "prop-types";
-import { Menu, Bell } from "lucide-react";
+import { Menu, Bell, LogOut } from "lucide-react";
 import ThemeToggle from "../theme/ThemeToggle/ThemeToggle.jsx";
+import { useAuth } from "../../context/AuthContext.jsx";
 import styles from "./Navbar.module.css";
 
 const Navbar = ({ isSidebarOpen, onToggleSidebar }) => {
+  const { user, logout } = useAuth();
+
   return (
     <header className={styles.navbar}>
       <div className={styles.left}>
@@ -27,8 +30,17 @@ const Navbar = ({ isSidebarOpen, onToggleSidebar }) => {
         </div>
         <div className={styles.userInfo}>
           <div className={styles.avatar} aria-hidden="true" />
-          <span className={styles.username}>Guest User</span>
+          <span className={styles.username}>{user?.name || "User"}</span>
         </div>
+        <button
+          type="button"
+          className={styles.logoutButton}
+          onClick={logout}
+          aria-label="Log out"
+          title="Log out"
+        >
+          <LogOut size={18} />
+        </button>
       </div>
     </header>
   );

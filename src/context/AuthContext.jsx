@@ -1,0 +1,94 @@
+import { createContext, useContext, useState } from "react";
+import PropTypes from "prop-types";
+import { loginUser, registerUser } from "../services/authApi.js";
+import { AUTH_TOKEN_KEY, AUTH_USER_KEY } from "../constants/auth.js";
+
+const AuthContext = createContext(null);
+
+const readStoredUser = () => {
+  try {
+    const stored = localStorage.getItem(AUTH_USER_KEY);
+    return stored ? JSON.parse(stored) : null;
+  } catch {
+    return null;
+  }
+};
+
+export const AuthProvider = ({ children }) => {
+  const [token, setToken] = useState(() => localStorage.getItem(AUTH_TOKEN_KEY));
+  const [user, setUser] = useState(readStoredUser);
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState(null);
+
+  const persistSession = (nextToken, nextUser) => {
+    setToken(nextToken);
+    setUser(nextUser);
+    localStorage.setItem(AUTH_TOKEN_KEY, nextToken);
+    localStorage.setItem(AUTH_USER_KEY, JSON.stringify(nextUser));
+  };
+
+  const login = async (credentials) => {
+    setIsLoading(true);
+    setError(null);
+    try {
+      const { token: newToken, user: newUser } = await loginUser(credentials);
+      persistSession(newToken, newUser);
+      return true;
+    } catch (err) {
+      setError(err.message || "Login failed.");
+      return false;
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const register = async (details) => {
+    setIsLoading(true);
+    setError(null);
+    try {
+      const { token: newToken, user: newUser } = await registerUser(details);
+      persistSession(newToken, newUser);
+      return true;
+    } catch (err) {
+      setError(err.message || "Registration failed.");
+      return false;
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const logout = () => {
+    setToken(null);
+    setUser(null);
+    localStorage.removeItem(AUTH_TOKEN_KEY);
+    localStorage.removeItem(AUTH_USER_KEY);
+  };
+
+  const dismissError = () => setError(null);
+
+  const value = {
+    token,
+    user,
+    isAuthenticated: Boolean(token),
+    isLoading,
+    error,
+    login,
+    register,
+    logout,
+    dismissError,
+  };
+
+  return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
+};
+
+AuthProvider.propTypes = {
+  children: PropTypes.node.isRequired,
+};
+
+export const useAuth = () => {
+  const context = useContext(AuthContext);
+  if (!context) {
+    throw new Error("useAuth must be used within an AuthProvider");
+  }
+  return context;
+};
