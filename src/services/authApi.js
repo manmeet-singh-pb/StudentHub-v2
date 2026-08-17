@@ -27,3 +27,11 @@ export const loginUser = async ({ email, password }) => {
   });
   return handleResponse(response);
 };
+
+export const getCurrentUser = async (token) => {
+  const response = await fetch(`${API_BASE_URL}/auth/me`, {
+    headers: { Authorization: `Bearer ${token}` },
+  });
+
+  return handleResponse(response);
+};

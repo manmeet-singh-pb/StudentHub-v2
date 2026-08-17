@@ -1,24 +1,48 @@
-import { createContext, useContext, useState } from "react";
+import { createContext, useContext, useState, useEffect } from "react";
 import PropTypes from "prop-types";
-import { loginUser, registerUser } from "../services/authApi.js";
-import { AUTH_TOKEN_KEY, AUTH_USER_KEY } from "../constants/auth.js";
+import {
+  loginUser,
+  registerUser,
+  getCurrentUser,
+} from "../services/authApi.js";
+import {
+  AUTH_TOKEN_KEY,
+  AUTH_USER_KEY,
+} from "../constants/auth.js";
 
 const AuthContext = createContext(null);
 
-const readStoredUser = () => {
-  try {
-    const stored = localStorage.getItem(AUTH_USER_KEY);
-    return stored ? JSON.parse(stored) : null;
-  } catch {
-    return null;
-  }
-};
-
 export const AuthProvider = ({ children }) => {
-  const [token, setToken] = useState(() => localStorage.getItem(AUTH_TOKEN_KEY));
-  const [user, setUser] = useState(readStoredUser);
+  const [token, setToken] = useState(() =>
+    localStorage.getItem(AUTH_TOKEN_KEY)
+  );
+  const [user, setUser] = useState(null);
+  const [isInitializing, setIsInitializing] = useState(true);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState(null);
+
+  useEffect(() => {
+    const storedToken = localStorage.getItem(AUTH_TOKEN_KEY);
+
+    if (!storedToken) {
+      setIsInitializing(false);
+      return;
+    }
+
+    getCurrentUser(storedToken)
+      .then((data) => {
+        setUser(data.user);
+      })
+      .catch(() => {
+        setToken(null);
+        setUser(null);
+        localStorage.removeItem(AUTH_TOKEN_KEY);
+        localStorage.removeItem(AUTH_USER_KEY);
+      })
+      .finally(() => {
+        setIsInitializing(false);
+      });
+  }, []);
 
   const persistSession = (nextToken, nextUser) => {
     setToken(nextToken);
@@ -30,8 +54,11 @@ export const AuthProvider = ({ children }) => {
   const login = async (credentials) => {
     setIsLoading(true);
     setError(null);
+
     try {
-      const { token: newToken, user: newUser } = await loginUser(credentials);
+      const { token: newToken, user: newUser } =
+        await loginUser(credentials);
+
       persistSession(newToken, newUser);
       return true;
     } catch (err) {
@@ -45,8 +72,11 @@ export const AuthProvider = ({ children }) => {
   const register = async (details) => {
     setIsLoading(true);
     setError(null);
+
     try {
-      const { token: newToken, user: newUser } = await registerUser(details);
+      const { token: newToken, user: newUser } =
+        await registerUser(details);
+
       persistSession(newToken, newUser);
       return true;
     } catch (err) {
@@ -70,6 +100,7 @@ export const AuthProvider = ({ children }) => {
     token,
     user,
     isAuthenticated: Boolean(token),
+    isInitializing,
     isLoading,
     error,
     login,
@@ -78,7 +109,11 @@ export const AuthProvider = ({ children }) => {
     dismissError,
   };
 
-  return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
+  return (
+    <AuthContext.Provider value={value}>
+      {children}
+    </AuthContext.Provider>
+  );
 };
 
 AuthProvider.propTypes = {
@@ -87,8 +122,10 @@ AuthProvider.propTypes = {
 
 export const useAuth = () => {
   const context = useContext(AuthContext);
+
   if (!context) {
     throw new Error("useAuth must be used within an AuthProvider");
   }
+
   return context;
 };
