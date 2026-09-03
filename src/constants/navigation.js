@@ -6,5 +6,11 @@ export const navigation = [
   {
     label: "Students",
     path: "/students",
+    roles: ["teacher"],
+  },
+  {
+    label: "My Profile",
+    path: "/profile",
+    roles: ["student"],
   },
 ];

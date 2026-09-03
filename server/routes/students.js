@@ -13,7 +13,7 @@ const isValidObjectId = (id) => mongoose.Types.ObjectId.isValid(id);
 
 router.get("/", async (req, res, next) => {
   try {
-    const students = await Student.find().sort({ createdAt: -1 });
+    const students = await Student.find({ owner: req.user.id }).sort({ createdAt: -1 });
     res.json({ students: students.map(serializeStudent) });
   } catch (error) {
     next(error);
@@ -27,7 +27,7 @@ router.get("/:id", async (req, res, next) => {
       return res.status(400).json({ error: "Bad Request", message: "Invalid student id." });
     }
 
-    const student = await Student.findById(id);
+    const student = await Student.findOne({ _id: id, owner: req.user.id });
     if (!student) {
       return res.status(404).json({ error: "Not Found", message: "Student not found." });
     }
@@ -53,6 +53,7 @@ router.post("/", async (req, res, next) => {
       name: name.trim(),
       email: email.trim().toLowerCase(),
       course: course.trim(),
+      owner: req.user.id,
     });
 
     res.status(201).json(serializeStudent(student));
@@ -82,8 +83,8 @@ router.put("/:id", async (req, res, next) => {
       });
     }
 
-    const student = await Student.findByIdAndUpdate(
-      id,
+    const student = await Student.findOneAndUpdate(
+      { _id: id, owner: req.user.id },
       { name: name.trim(), email: email.trim().toLowerCase(), course: course.trim() },
       { new: true, runValidators: true }
     );
@@ -111,7 +112,7 @@ router.delete("/:id", async (req, res, next) => {
       return res.status(400).json({ error: "Bad Request", message: "Invalid student id." });
     }
 
-    const student = await Student.findByIdAndDelete(id);
+    const student = await Student.findOneAndDelete({ _id: id, owner: req.user.id });
     if (!student) {
       return res.status(404).json({ error: "Not Found", message: "Student not found." });
     }

@@ -24,7 +24,7 @@ const auth = async (req, res, next) => {
       });
     }
 
-    req.user = { id: user._id.toString(), name: user.name, email: user.email };
+    req.user = { id: user._id.toString(), name: user.name, email: user.email, role: user.role };
     next();
   } catch (error) {
     return res.status(401).json({

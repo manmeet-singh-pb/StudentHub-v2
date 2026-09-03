@@ -4,21 +4,50 @@ import { AlertCircle, Eye, EyeOff } from "lucide-react";
 import { useAuth } from "../context/AuthContext.jsx";
 import Button from "../components/common/Button/Button.jsx";
 import styles from "./Login.module.css";
+import ThemeToggle from "../components/theme/ThemeToggle/ThemeToggle.jsx";
+
+const ROLES = [
+  {
+    value: "student",
+    label: "Student",
+    description: "View your attendance, marks and academic progress.",
+  },
+  {
+    value: "teacher",
+    label: "Teacher",
+    description: "Manage students, attendance and marks for your subjects.",
+  },
+];
 
 const Login = () => {
   const { login, isLoading, error, dismissError } = useAuth();
   const navigate = useNavigate();
-  const [formData, setFormData] = useState({ email: "", password: "" });
+
+  const [formData, setFormData] = useState({
+    email: "",
+    password: "",
+  });
+
+  const [role, setRole] = useState("student");
   const [showPassword, setShowPassword] = useState(false);
 
   const handleChange = (event) => {
     const { name, value } = event.target;
-    setFormData((prev) => ({ ...prev, [name]: value }));
+
+    setFormData((prev) => ({
+      ...prev,
+      [name]: value,
+    }));
   };
 
   const handleSubmit = async (event) => {
     event.preventDefault();
-    const success = await login(formData);
+
+    const success = await login({
+      ...formData,
+      role,
+    });
+
     if (success) {
       navigate("/", { replace: true });
     }
@@ -26,12 +55,19 @@ const Login = () => {
 
   return (
     <div className={styles.page}>
+      {/* Theme Toggle positioned at the top right */}
+      <div className={styles.themeToggle}>
+        <ThemeToggle />
+      </div>
+
       <div className={styles.visualPanel}>
         <div className={styles.aurora} aria-hidden="true" />
 
         <div className={styles.brand}>
           <span className={styles.brandMark}>StudentHub</span>
-          <p className={styles.tagline}>Your academic life, organized.</p>
+          <p className={styles.tagline}>
+            Your academic life, organized.
+          </p>
         </div>
 
         <div className={styles.orbitVisual} aria-hidden="true">
@@ -44,8 +80,18 @@ const Login = () => {
           </div>
 
           <svg className={styles.ring} viewBox="0 0 240 240">
-            <circle className={styles.ringTrack} cx="120" cy="120" r="100" />
-            <circle className={styles.ringProgress} cx="120" cy="120" r="100" />
+            <circle
+              className={styles.ringTrack}
+              cx="120"
+              cy="120"
+              r="100"
+            />
+            <circle
+              className={styles.ringProgress}
+              cx="120"
+              cy="120"
+              r="100"
+            />
           </svg>
 
           <div className={styles.ringCenter}>
@@ -57,6 +103,7 @@ const Login = () => {
             <span className={styles.tagDot} />
             Assignments <strong>4 due</strong>
           </div>
+
           <div className={`${styles.infoTag} ${styles.tagTwo}`}>
             <span className={styles.tagDot} />
             Attendance <strong>92%</strong>
@@ -65,22 +112,75 @@ const Login = () => {
 
         <p className={styles.visualMessage}>
           Everything about your semester, in one clear view.
-          <span>Classes, tasks, and progress — always in sync.</span>
+          <span>
+            Classes, tasks, and progress — always in sync.
+          </span>
         </p>
       </div>
 
       <div className={styles.formPanel}>
-        <form className={styles.formCard} onSubmit={handleSubmit} noValidate>
+        <form
+          className={styles.formCard}
+          onSubmit={handleSubmit}
+          noValidate
+        >
           <span className={styles.eyebrow}>Welcome back</span>
-          <h1 className={styles.heading}>Sign in to StudentHub.</h1>
+
+          <h1 className={styles.heading}>
+            Sign in to StudentHub.
+          </h1>
+
           <p className={styles.subheading}>
             Continue managing your academic life in one place.
           </p>
 
+          {/* Student / Teacher selector */}
+          <fieldset className={styles.roleGroup}>
+            <legend className={styles.roleLegend}>
+              Sign in as
+            </legend>
+
+            <div className={styles.roleOptions}>
+              {ROLES.map((option) => (
+                <label
+                  key={option.value}
+                  className={`${styles.roleOption} ${
+                    role === option.value
+                      ? styles.roleOptionActive
+                      : ""
+                  }`}
+                >
+                  <input
+                    type="radio"
+                    name="role"
+                    value={option.value}
+                    checked={role === option.value}
+                    onChange={() => setRole(option.value)}
+                    className={styles.roleRadio}
+                  />
+
+                  <span className={styles.roleLabel}>
+                    {option.label}
+                  </span>
+
+                  <span className={styles.roleDescription}>
+                    {option.description}
+                  </span>
+                </label>
+              ))}
+            </div>
+          </fieldset>
+
           {error && (
             <div className={styles.errorBanner} role="alert">
-              <AlertCircle size={16} className={styles.errorIcon} aria-hidden="true" />
+              <AlertCircle
+                size={16}
+                className={styles.errorIcon}
+                aria-hidden="true"
+              />
+
               <span>{error}</span>
+
               <button
                 type="button"
                 className={styles.errorDismiss}
@@ -93,9 +193,13 @@ const Login = () => {
           )}
 
           <div className={styles.field}>
-            <label htmlFor="email" className={styles.label}>
+            <label
+              htmlFor="email"
+              className={styles.label}
+            >
               Email address
             </label>
+
             <input
               id="email"
               name="email"
@@ -110,9 +214,13 @@ const Login = () => {
           </div>
 
           <div className={styles.field}>
-            <label htmlFor="password" className={styles.label}>
+            <label
+              htmlFor="password"
+              className={styles.label}
+            >
               Password
             </label>
+
             <div className={styles.passwordWrapper}>
               <input
                 id="password"
@@ -125,13 +233,24 @@ const Login = () => {
                 onChange={handleChange}
                 className={styles.input}
               />
+                
               <button
                 type="button"
                 className={styles.togglePassword}
-                onClick={() => setShowPassword((prev) => !prev)}
-                aria-label={showPassword ? "Hide password" : "Show password"}
+                onClick={() =>
+                  setShowPassword((prev) => !prev)
+                }
+                aria-label={
+                  showPassword
+                    ? "Hide password"
+                    : "Show password"
+                }
               >
-                {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+                {showPassword ? (
+                  <EyeOff size={18} />
+                ) : (
+                  <Eye size={18} />
+                )}
               </button>
             </div>
           </div>
@@ -144,7 +263,10 @@ const Login = () => {
           >
             {isLoading ? (
               <span className={styles.loadingContent}>
-                <span className={styles.spinner} aria-hidden="true" />
+                <span
+                  className={styles.spinner}
+                  aria-hidden="true"
+                />
                 Signing in...
               </span>
             ) : (
@@ -154,7 +276,10 @@ const Login = () => {
 
           <p className={styles.switchText}>
             Don&apos;t have an account?{" "}
-            <Link to="/register" className={styles.switchLink}>
+            <Link
+              to="/register"
+              className={styles.switchLink}
+            >
               Create one
             </Link>
           </p>

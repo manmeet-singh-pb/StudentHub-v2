@@ -4,19 +4,44 @@ import { useAuth } from "../context/AuthContext.jsx";
 import Button from "../components/common/Button/Button.jsx";
 import styles from "./Register.module.css";
 
+const ROLES = [
+  {
+    value: "student",
+    label: "Student",
+    description: "View your academic progress, attendance, courses and marks.",
+  },
+  {
+    value: "teacher",
+    label: "Teacher",
+    description: "Manage students, attendance, marks and academic progress.",
+  },
+];
+
 const Register = () => {
   const { register, isLoading, error, dismissError } = useAuth();
   const navigate = useNavigate();
-  const [formData, setFormData] = useState({ name: "", email: "", password: "" });
+
+  const [formData, setFormData] = useState({
+    name: "",
+    email: "",
+    password: "",
+    role: "student",
+  });
 
   const handleChange = (event) => {
     const { name, value } = event.target;
-    setFormData((prev) => ({ ...prev, [name]: value }));
+
+    setFormData((prev) => ({
+      ...prev,
+      [name]: value,
+    }));
   };
 
   const handleSubmit = async (event) => {
     event.preventDefault();
+
     const success = await register(formData);
+
     if (success) {
       navigate("/", { replace: true });
     }
@@ -24,22 +49,38 @@ const Register = () => {
 
   return (
     <div className={styles.page}>
-      <form className={styles.card} onSubmit={handleSubmit} noValidate>
-        <h1 className={styles.title}>Create your StudentHub account</h1>
+      <form
+        className={styles.card}
+        onSubmit={handleSubmit}
+        noValidate
+      >
+        <h1 className={styles.title}>
+          Create your StudentHub account
+        </h1>
 
         {error && (
           <div className={styles.errorBanner} role="alert">
             <span>{error}</span>
-            <Button variant="secondary" size="sm" type="button" onClick={dismissError}>
+
+            <Button
+              variant="secondary"
+              size="sm"
+              type="button"
+              onClick={dismissError}
+            >
               Dismiss
             </Button>
           </div>
         )}
 
         <div className={styles.field}>
-          <label htmlFor="name" className={styles.label}>
+          <label
+            htmlFor="name"
+            className={styles.label}
+          >
             Name
           </label>
+
           <input
             id="name"
             name="name"
@@ -53,9 +94,13 @@ const Register = () => {
         </div>
 
         <div className={styles.field}>
-          <label htmlFor="email" className={styles.label}>
+          <label
+            htmlFor="email"
+            className={styles.label}
+          >
             Email
           </label>
+
           <input
             id="email"
             name="email"
@@ -69,9 +114,13 @@ const Register = () => {
         </div>
 
         <div className={styles.field}>
-          <label htmlFor="password" className={styles.label}>
+          <label
+            htmlFor="password"
+            className={styles.label}
+          >
             Password
           </label>
+
           <input
             id="password"
             name="password"
@@ -85,13 +134,46 @@ const Register = () => {
           />
         </div>
 
-        <Button type="submit" variant="primary" disabled={isLoading}>
+        <fieldset className={styles.roleGroup}>
+          <legend className={styles.roleLegend}>Account type</legend>
+          <div className={styles.roleOptions}>
+            {ROLES.map((option) => (
+              <label
+                key={option.value}
+                className={`${styles.roleOption} ${
+                  formData.role === option.value ? styles.roleOptionActive : ""
+                }`}
+              >
+                <input
+                  type="radio"
+                  name="role"
+                  value={option.value}
+                  checked={formData.role === option.value}
+                  onChange={handleChange}
+                  className={styles.roleRadio}
+                />
+                <span className={styles.roleLabel}>{option.label}</span>
+                <span className={styles.roleDescription}>{option.description}</span>
+              </label>
+            ))}
+          </div>
+        </fieldset>
+
+        <Button
+          type="submit"
+          variant="primary"
+          disabled={isLoading}
+        >
           {isLoading ? "Creating account..." : "Register"}
         </Button>
 
         <p className={styles.switchText}>
           Already have an account?{" "}
-          <Link to="/login" className={styles.switchLink}>
+
+          <Link
+            to="/login"
+            className={styles.switchLink}
+          >
             Log In
           </Link>
         </p>
