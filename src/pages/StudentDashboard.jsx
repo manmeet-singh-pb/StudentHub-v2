@@ -1,9 +1,33 @@
+import { useEffect, useState } from "react";
 import { useAuth } from "../context/AuthContext.jsx";
 import { CalendarCheck, BookOpen, ClipboardList, Activity } from "lucide-react";
+import { getMySubjects } from "../services/studentSubjectsApi.js";
 import styles from "./StudentDashboard.module.css";
 
 const StudentDashboard = () => {
   const { user } = useAuth();
+  const [subjects, setSubjects] = useState([]);
+  const [isLoadingSubjects, setIsLoadingSubjects] = useState(true);
+
+  useEffect(() => {
+    let isMounted = true;
+
+    getMySubjects()
+      .then((data) => {
+        if (isMounted) setSubjects(data);
+      })
+      .catch(() => {
+        // A failed fetch here just leaves the list empty — this is a
+        // small dashboard card, not a page-critical load.
+      })
+      .finally(() => {
+        if (isMounted) setIsLoadingSubjects(false);
+      });
+
+    return () => {
+      isMounted = false;
+    };
+  }, []);
 
   return (
     <section className={styles.page}>
@@ -26,7 +50,20 @@ const StudentDashboard = () => {
             <BookOpen size={18} className={styles.cardIcon} />
             <h3 className={styles.cardTitle}>Courses</h3>
           </div>
-          <p className={styles.cardEmpty}>You aren&apos;t enrolled in any courses yet.</p>
+          {isLoadingSubjects ? (
+            <p className={styles.cardEmpty}>Loading your courses...</p>
+          ) : subjects.length > 0 ? (
+            <ul className={styles.subjectList}>
+              {subjects.map((subject) => (
+                <li key={subject.id} className={styles.subjectListItem}>
+                  <span className={styles.subjectName}>{subject.name}</span>
+                  {subject.code && <span className={styles.subjectCode}>{subject.code}</span>}
+                </li>
+              ))}
+            </ul>
+          ) : (
+            <p className={styles.cardEmpty}>You aren&apos;t enrolled in any courses yet.</p>
+          )}
         </div>
 
         <div className={styles.card}>
