@@ -111,15 +111,15 @@ Attendance, timetable, announcements, assignments, exams, results, mentor record
 ### Live HTTP surface
 
 | Method | Path | Access | Purpose |
-| --- | --- | --- | --- |
-| `GET` | `/api/health` | Public | Liveness |
-| `POST` | `/api/auth/register` | Public | Create account |
-| `POST` | `/api/auth/login` | Public | Issue JWT |
-| `GET` | `/api/auth/me` | Authenticated | Restore session |
-| `GET`, `POST` | `/api/students` | Teacher | List / create registry records |
-| `GET`, `PUT`, `DELETE` | `/api/students/:id` | Teacher | Read / update / delete own records |
-| `GET` | `/api/student/profile` | Student | Read (or create) own profile |
-| `GET` | `/api/student/subjects` | Student | List enrolled subjects |
+| --- | --- | --- |
+| GET | `/api/health` | Public | Liveness |
+| POST | `/api/auth/register` | Public | Create account |
+| POST | `/api/auth/login` | Public | Issue JWT |
+| GET | `/api/auth/me` | Authenticated | Restore session |
+| GET, POST | `/api/students` | Teacher | List / create registry records |
+| GET, PUT, DELETE | `/api/students/:id` | Teacher | Read / update / delete own records |
+| GET | `/api/student/profile` | Student | Read (or create) own profile |
+| GET | `/api/student/subjects` | Student | List enrolled subjects |
 
 Frontend routes: `/login`, `/register` (public); `/` (role dashboard); `/students` (teacher registry); `/profile` (student profile).
 
@@ -131,162 +131,93 @@ StudentHub is a two-process system. The Vite app never talks to MongoDB. The Exp
 
 ```mermaid
 flowchart TB
-    FE["React / Vite Frontend"]
-    RR["React Router / UI"]
-    API["Express REST API"]
-    JWT["JWT Authentication Middleware"]
-    AUTHZ["Role / Ownership Authorization"]
-    MG["Mongoose"]
-    DB[("MongoDB")]
-
+    FE[React / Vite Frontend]
+    RR[React Router / UI]
+    API[Express REST API]
+    JWT[JWT Authentication Middleware]
+    AUTHZ[Role / Ownership Authorization]
+    MG[Mongoose]
+    DB[(MongoDB)]
     FE --> RR
     RR --> API
     API --> JWT
     JWT --> AUTHZ
     AUTHZ --> MG
     MG --> DB
+```
 
+| Layer | Responsibility |
+| --- | --- |
+| React / Vite frontend | Screens, theme, client session, form UX. Talks to the API through `src/services`. |
+| React Router / UI | Public auth pages vs. `MainLayout` (navbar, sidebar, outlet). `ProtectedRoute` requires a session. |
+| Express REST API | JSON endpoints under `/api`. CORS is set to the Vite origin (`http://localhost:5173`). |
+| JWT authentication middleware | Requires `Authorization: Bearer` token, verifies the signature, loads the user, attaches `req.user`. |
+| Role / ownership authorization | `requireRole` rejects the wrong role with `403`. Teacher registry queries are scoped by `owner`. Student profile and subjects are scoped to the caller. |
+| Mongoose | Schemas, indexes, and serialization for `User`, `Student`, `StudentProfile`, `Subject`, `Enrollment`. |
+| MongoDB | Source of truth for accounts and academic documents. |
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-LayerResponsibilityReact / Vite frontendScreens, theme, client session, form UX. Talks to the API through src/services.React Router / UIPublic auth pages vs. MainLayout (navbar, sidebar, outlet). ProtectedRoute requires a session.Express REST APIJSON endpoints under /api. CORS is set to the Vite origin (http://localhost:5173).JWT authentication middlewareRequires Authorization: Bearer <token>, verifies the signature, loads the user, attaches req.user.Role / ownership authorizationrequireRole rejects the wrong role with 403. Teacher registry queries are scoped by owner. Student profile and subjects are scoped to the caller.MongooseSchemas, indexes, and serialization for User, Student, StudentProfile, Subject, Enrollment.MongoDBSource of truth for accounts and academic documents.
 The frontend is not trusted for access control. Hiding a nav item is convenience. A teacher-only route without a valid teacher JWT still fails at the API.
 
-Authentication and Security
-What is implemented is listed below. Cookie sessions, refresh tokens, email verification, password reset, rate limiting, and HTTP-only token storage are not implemented.
-Password hashing
+---
 
-Passwords are hashed with bcryptjs (10 salt rounds) before insert. The User schema sets select: false on password, so list/get queries do not return hashes. Login loads the hash explicitly and compares with bcrypt.compare. Failed logins return a generic unauthorized message.
-JWT sessions
+## Authentication and Security
 
-On register and login the API signs a token containing { userId }, expiring in 7 days. The client sends it as Authorization: Bearer <token>. Middleware verifies the token with JWT_SECRET and confirms the user still exists. Invalid, missing, or expired tokens return 401.
-Protected routes
+What is implemented is listed below. Cookie sessions, refresh tokens, email verification, password reset, rate limiting, and HTTP-only token storage are **not** implemented.
 
-/api/auth/register and /api/auth/login are public. /api/auth/me, /api/students, and /api/student require a valid token. Collection mounts apply auth then requireRole.
-Role authorization
+**Password hashing**  
+Passwords are hashed with `bcryptjs` (10 salt rounds) before insert. The `User` schema sets `select: false` on `password`, so list/get queries do not return hashes. Login loads the hash explicitly and compares with `bcrypt.compare`. Failed logins return a generic unauthorized message.
 
-Roles are an enum: student | teacher. Registration only accepts those two values. Email is normalized to lowercase and unique.
-Ownership and isolation
+**JWT sessions**  
+On register and login the API signs a token containing `{ userId }`, expiring in **7 days**. The client sends it as a Bearer token. Middleware verifies the token with `JWT_SECRET` and confirms the user still exists. Invalid, missing, or expired tokens return `401`.
 
-Teacher registry documents store owner and are queried with { owner: req.user.id }. Students cannot call teacher collection routes. Teachers cannot call student profile/subject routes. Subject handlers (when mounted) additionally match { teacher: req.user.id }.
-Registration is development-stage
+**Protected routes**  
+`/api/auth/register` and `/api/auth/login` are public. `/api/auth/me`, `/api/students`, and `/api/student` require a valid token. Collection mounts apply `auth` then `requireRole`.
 
-Role is currently self-selected at registration so both account types can be tested without an admin console. The auth route comments this as intentional and temporary. A production deployment should not ship unrestricted teacher self-provisioning.
-Client storage
+**Role authorization**  
+Roles are an enum: `student` or `teacher`. Registration only accepts those two values. Email is normalized to lowercase and unique.
 
-The access token is stored in localStorage (studenthub-auth-token). This is a standard SPA pattern and is XSS-sensitive. It is not an HTTP-only cookie session.
-CORS
+**Ownership and isolation**  
+Teacher registry documents store `owner` and are queried with `{ owner: req.user.id }`. Students cannot call teacher collection routes. Teachers cannot call student profile/subject routes. Subject handlers (when mounted) additionally match `{ teacher: req.user.id }`.
 
-The API allows http://localhost:5173 only. That matches the default Vite dev server.
-Secrets
+**Registration is development-stage**  
+Role is currently **self-selected** at registration so both account types can be tested without an admin console. The auth route comments this as intentional and temporary. A production deployment should not ship unrestricted teacher self-provisioning.
 
-JWT_SECRET must be set in server/.env. Do not commit .env files; they are gitignored.
+**Client storage**  
+The access token is stored in `localStorage` (`studenthub-auth-token`). This is a standard SPA pattern and is XSS-sensitive. It is not an HTTP-only cookie session.
 
-Technology Stack
+**CORS**  
+The API allows `http://localhost:5173` only. That matches the default Vite dev server.
 
+**Secrets**  
+`JWT_SECRET` must be set in `server/.env`. Do not commit `.env` files; they are gitignored.
 
+---
 
+## Technology Stack
 
+| Layer | Choice | Notes |
+| --- | --- | --- |
+| Frontend | React 19, Vite 8, React Router 7 | JavaScript, CSS Modules |
+| UI | Lucide React, PropTypes | Shared button, layout, theme toggle |
+| Backend | Node.js, Express 4 | ESM (`type: module`) |
+| Database | MongoDB, Mongoose 8 | Indexes on owner, email, enrollments |
+| Authentication | jsonwebtoken, bcryptjs | Bearer JWT, hashed passwords |
+| HTTP | cors, dotenv | Origin lock and env loading |
+| Tooling | ESLint, Vite plugin React | `npm run lint` / `npm run build` |
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-LayerChoiceNotesFrontendReact 19, Vite 8, React Router 7JavaScript, CSS ModulesUILucide React, PropTypesShared button, layout, theme toggleBackendNode.js, Express 4ESM ("type": "module")DatabaseMongoDB, Mongoose 8Indexes on owner, email, enrollmentsAuthenticationjsonwebtoken, bcryptjsBearer JWT, hashed passwordsHTTPcors, dotenvOrigin lock and env loadingToolingESLint, Vite plugin Reactnpm run lint / npm run build
 Two packages, two install trees:
 
+| Package | Path | npm name |
+| --- | --- | --- |
+| Client | repository root | `studenthub-v2` |
+| API | `server/` | `studenthub-server` |
 
+---
 
+## Project Structure
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-PackagePathnpm nameClientrepository rootstudenthub-v2APIserver/studenthub-server
-
-Project Structure
-textStudentHub-v2/
+```text
+StudentHub-v2/
 ├── src/                          # Vite + React client
 │   ├── assets/
 │   ├── components/
@@ -300,7 +231,7 @@ textStudentHub-v2/
 │   │   └── theme/
 │   ├── constants/
 │   ├── context/                  # AuthProvider
-│   ├── hooks/                    # useStudents, useTheme, …
+│   ├── hooks/                    # useStudents, useTheme
 │   ├── layouts/                  # Authenticated shell
 │   ├── pages/                    # Login, Register, dashboards, profile, students
 │   ├── services/                 # auth, students, profile, subjects API clients
@@ -320,252 +251,203 @@ textStudentHub-v2/
 ├── vite.config.js
 ├── eslint.config.js
 └── package.json
-server/routes/teacher.js is in the tree and implements teacher subject/enrollment handlers. It is not registered in server/app.js.
-Some client modules (Courses, Dashboard analytics, local course state) remain from earlier phases and are not in the current router.
+```
 
-Getting Started
-Prerequisites
+`server/routes/teacher.js` is in the tree and implements teacher subject/enrollment handlers. It is **not** registered in `server/app.js`.
 
-Node.js 18+ (the API uses node --watch)
-npm
-MongoDB running locally, or a MongoDB Atlas URI
+Some client modules (`Courses`, `Dashboard` analytics, local course state) remain from earlier phases and are **not** in the current router.
 
-Clone
-Bashgit clone https://github.com/manmeet-singh-pb/StudentHub-v2.git
+---
+
+## Getting Started
+
+### Prerequisites
+
+- **Node.js 18+** (the API uses `node --watch`)
+- **npm**
+- **MongoDB** running locally, or a MongoDB Atlas URI
+
+### Clone
+
+```bash
+git clone https://github.com/manmeet-singh-pb/StudentHub-v2.git
 cd StudentHub-v2
-Install
-Bash# client
-npm install
+```
 
-# API
+### Install
+
+```bash
+npm install
 cd server
 npm install
 cd ..
-Configure the API
-Bashcp server/.env.example server/.env
-Edit server/.env (see Environment Configuration). The client defaults to http://localhost:5000/api if VITE_API_URL is unset.
-Run the API
-Bashcd server
-npm run dev
-Health check: GET http://localhost:5000/api/health
-Run the client
-In a second terminal, from the repository root:
-Bashnpm run dev
-Vite serves the app at http://localhost:5173. CORS is configured for that origin.
-Create a student account and a teacher account from /register to exercise both workspaces.
+```
 
-Environment Configuration
-API — server/.env
-Copied from server/.env.example:
-BashPORT=5000
+### Configure the API
+
+```bash
+cp server/.env.example server/.env
+```
+
+Edit `server/.env` (see [Environment Configuration](#environment-configuration)). The client defaults to `http://localhost:5000/api` if `VITE_API_URL` is unset.
+
+### Run the API
+
+```bash
+cd server
+npm run dev
+```
+
+Health check: `GET http://localhost:5000/api/health`
+
+### Run the client
+
+In a second terminal, from the repository root:
+
+```bash
+npm run dev
+```
+
+Vite serves the app at [http://localhost:5173](http://localhost:5173). CORS is configured for that origin.
+
+Create a student account and a teacher account from `/register` to exercise both workspaces.
+
+---
+
+## Environment Configuration
+
+### API — `server/.env`
+
+Copied from `server/.env.example`:
+
+```bash
+PORT=5000
 MONGODB_URI=mongodb://localhost:27017/studenthub
 JWT_SECRET=change_this_to_a_real_secret
+```
 
+| Variable | Required | Purpose |
+| --- | --- | --- |
+| `PORT` | No | Listen port. Defaults to `5000`. |
+| `MONGODB_URI` | **Yes** | MongoDB connection string. The process exits if it is missing. |
+| `JWT_SECRET` | **Yes** | HMAC secret for access tokens. Use a long random value locally and in any shared environment. |
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-VariableRequiredPurposePORTNoListen port. Defaults to 5000.MONGODB_URIYesMongoDB connection string. The process exits if it is missing.JWT_SECRETYesHMAC secret for access tokens. Use a long random value locally and in any shared environment.
 Atlas example (placeholder only):
-BashMONGODB_URI=mongodb+srv://USER:PASSWORD@CLUSTER.mongodb.net/studenthub
-Client
-The client reads import.meta.env.VITE_API_URL and falls back to http://localhost:5000/api. To override, create a gitignored .env at the repository root:
-BashVITE_API_URL=http://localhost:5000/api
-There is no frontend .env.example in the repository. Do not commit secrets. server/.env and root .env are listed in .gitignore.
 
-Development Workflow
+```bash
+MONGODB_URI=mongodb+srv://USER:PASSWORD@CLUSTER.mongodb.net/studenthub
+```
+
+### Client
+
+The client reads `import.meta.env.VITE_API_URL` and falls back to `http://localhost:5000/api`. To override, create a gitignored `.env` at the repository root:
+
+```bash
+VITE_API_URL=http://localhost:5000/api
+```
+
+There is no frontend `.env.example` in the repository. Do not commit secrets. `server/.env` and root `.env` are listed in `.gitignore`.
+
+---
+
+## Development Workflow
+
+| Command | Where | What |
+| --- | --- | --- |
+| `npm run dev` | `server/` | API with `node --watch` on port 5000 |
+| `npm start` | `server/` | API without watch |
+| `npm run dev` | repo root | Vite dev server (port 5173) |
+| `npm run build` | repo root | Production client bundle |
+| `npm run preview` | repo root | Preview the built client |
+| `npm run lint` | repo root | ESLint |
+
+Typical loop: start MongoDB, start the API, start Vite, sign in at `/login`. The client and API are separate processes; both must be running for authenticated screens to load data.
+
+---
+
+## Current Development Status
+
+StudentHub is in **active development**. The authentication core, role split, student profile, enrolled-subject list, and teacher registry are usable. The teacher academic workspace is the next seam.
+
+| Capability | State |
+| --- | --- |
+| Registration, login, JWT session restore | **Implemented** |
+| bcrypt password hashing | **Implemented** |
+| Role-gated API mounts | **Implemented** |
+| Teacher student registry (CRUD, search, filter) | **Implemented** |
+| Student dashboard + enrolled subjects | **Implemented** |
+| Student profile + completeness indicator | **Implemented** |
+| Subject / Enrollment models + uniqueness | **Implemented** |
+| Light / dark theme, responsive shell | **Implemented** |
+| Teacher subject route module | **In progress** — written, not mounted |
+| Teacher dashboard | **In progress** — placeholder |
+| Teacher-driven enrollment UI | **In progress** |
+| Frontend `allowedRoles` enforcement | **In progress** |
+| Profile editing | **In progress** |
+| Attendance | **Planned** |
+| Timetable | **Planned** |
+| Assignments / exams / results | **Planned** |
+| Announcements / notifications | **Planned** |
+| Mentor info, queries, events | **Planned** |
+| Documents, library, fees, LMS | **Planned** |
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-CommandWhereWhatnpm run devserver/API with node --watch on port 5000npm startserver/API without watchnpm run devrepo rootVite dev server (port 5173)npm run buildrepo rootProduction client bundlenpm run previewrepo rootPreview the built clientnpm run lintrepo rootESLint
-Typical loop: start MongoDB, start the API, start Vite, sign in at /login. The client and API are separate processes; both must be running for authenticated screens to load data.
-
-Current Development Status
-StudentHub is in active development. The authentication core, role split, student profile, enrolled-subject list, and teacher registry are usable. The teacher academic workspace is the next seam.
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-CapabilityStateRegistration, login, JWT session restoreImplementedbcrypt password hashingImplementedRole-gated API mountsImplementedTeacher student registry (CRUD, search, filter)ImplementedStudent dashboard + enrolled subjectsImplementedStudent profile + completeness indicatorImplementedSubject / Enrollment models + uniquenessImplementedLight / dark theme, responsive shellImplementedTeacher subject route moduleIn progress — written, not mountedTeacher dashboardIn progress — placeholderTeacher-driven enrollment UIIn progressFrontend allowedRoles enforcementIn progressProfile editingIn progressAttendancePlannedTimetablePlannedAssignments / exams / resultsPlannedAnnouncements / notificationsPlannedMentor info, queries, eventsPlannedDocuments, library, fees, LMSPlanned
 The navbar bell is decorative. Login-panel figures (attendance percentages, due assignments) are visual copy, not live data.
 
-Roadmap
-The intended direction is a university-style academic portal. Nothing in this section is implemented unless it also appears as Implemented above.
-Academic core
+---
 
+## Roadmap
+
+The intended direction is a university-style academic portal. Nothing in this section is implemented unless it also appears as **Implemented** above.
+
+**Academic core**  
 Wire and mount teacher subject management. Teacher-driven enrollment. Profile editing (roll number). Attendance. Timetable. Assignments. Exams. Results and grades. Academic progress.
-Communication
 
+**Communication**  
 Announcements. Notifications (replace the inert bell). Student queries. Mentor information.
-Campus services
 
+**Campus services**  
 Events. Documents. Library. Fees / accounts. University services. LMS integration.
+
 Work proceeds incrementally: keep auth and authorization stable, then add one academic vertical at a time rather than collapsing the domain into a single form.
 
-Engineering Principles
+---
+
+## Engineering Principles
+
 These are constraints already visible in the codebase, not aspirations.
 
-Authorize on the server. Role and owner checks live in Express middleware and queries. The UI does not decide access.
-Separate the client from the API. Pages call src/services; services call HTTP; Mongoose stays in server/.
-Keep domain models explicit. User, Student, StudentProfile, Subject, and Enrollment are different documents. The teacher registry is not the same thing as a student account.
-Prefer small dependencies. React, Router, Lucide, Express, Mongoose, JWT, bcrypt, cors, dotenv. No client state library, no UI kit.
-Isolate UI. CSS Modules, layouts, shared controls, an error boundary.
-Develop in slices. The history is phased (auth, roles, theme, subjects). New work should follow that grain.
-Fail closed. Missing token, bad token, wrong role, missing document, duplicate enrollment — each has a structured error, not a silent success.
+- **Authorize on the server.** Role and owner checks live in Express middleware and queries. The UI does not decide access.
+- **Separate the client from the API.** Pages call `src/services`; services call HTTP; Mongoose stays in `server/`.
+- **Keep domain models explicit.** `User`, `Student`, `StudentProfile`, `Subject`, and `Enrollment` are different documents. The teacher registry is not the same thing as a student account.
+- **Prefer small dependencies.** React, Router, Lucide, Express, Mongoose, JWT, bcrypt, cors, dotenv. No client state library, no UI kit.
+- **Isolate UI.** CSS Modules, layouts, shared controls, an error boundary.
+- **Develop in slices.** The history is phased (auth, roles, theme, subjects). New work should follow that grain.
+- **Fail closed.** Missing token, bad token, wrong role, missing document, duplicate enrollment — each has a structured error, not a silent success.
 
+---
 
-Contributing
+## Contributing
+
 This is a single-maintainer repository in active development. There is no contributor covenant, issue template set, or public roadmap tracker beyond this README.
+
 If you want to change something:
 
-Fork and branch from main.
-Run the client and API locally as documented above.
-Keep the change scoped. Do not mix a feature with a drive-by rewrite.
-Do not commit .env files or secrets.
-Open a pull request that states what is implemented vs. still open.
+1. Fork and branch from `main`.
+2. Run the client and API locally as documented above.
+3. Keep the change scoped. Do not mix a feature with a drive-by rewrite.
+4. Do not commit `.env` files or secrets.
+5. Open a pull request that states what is implemented vs. still open.
 
-Useful seams right now: mounting the teacher router, a teacher subject UI, profile update APIs, and tightening ProtectedRoute so allowedRoles is enforced.
+Useful seams right now: mounting the teacher router, a teacher subject UI, profile update APIs, and tightening `ProtectedRoute` so `allowedRoles` is enforced.
 
-License
+---
+
+## License
+
 No license file is included in this repository. Rights are unspecified until a license is published. Do not assume you may reuse, redistribute, or commercially exploit the source without an explicit grant from the copyright holder.
 
+---
+
 StudentHub v2 is the foundation of an academic platform: identity, roles, and records on a real API. The next work is not another landing screen — it is mounting the subject layer and growing the portal one vertical at a time.
-Back to top
+
+[Back to top](#studenthub-v2)
